@@ -185,6 +185,52 @@ class MLCommonClient:
 
         return model_id
 
+    def register_ltr_model(
+        self,
+        feature_set_name: str,
+        model_name: str,
+        model_type: str,
+        model_definition: str,
+        if_exists: str = "replace",
+    ) -> dict:
+        """
+        Registers a Learning to Rank (LTR) model in OpenSearch.
+
+        :param feature_set_name: Name of the feature set to use for the model
+        :param model_name: Name of the model
+        :param model_type: Type of the model (e.g., "model/ranklib")
+        :param model_definition: Definition of the model
+        :param if_exists: Action to take if model exists. "replace" to update, "error" to raise exception
+        :return: API response
+        """
+        endpoint = f"_ltr/_featureset/{feature_set_name}/_createmodel"
+
+        body = {
+            "model": {
+                "name": model_name,
+                "model": {"type": model_type, "definition": model_definition},
+            }
+        }
+
+        try:
+            existing_model = self._client.perform_request(
+                "GET", f"_ltr/_model/{model_name}"
+            )
+            if existing_model and if_exists == "error":
+                raise ValueError(
+                    f"Model '{model_name}' already exists and if_exists is set to 'error'."
+                )
+        except Exception as e:
+            if "404" not in str(e):
+                raise
+
+        method = "POST" if if_exists == "error" else "PUT"
+        response = self._client.perform_request(
+            method, endpoint, body=json.dumps(body), params={"pretty": "true"}
+        )
+
+        return response
+
     @deprecated(
         reason="Since OpenSearch 2.7.0, you can use register_pretrained_model instead",
         version="2.7.0",
