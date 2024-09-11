@@ -58,9 +58,7 @@ class LTRModelConfig:
         feature_extractors: List[QueryFeatureExtractor],
     ):
         self.feature_extractors = feature_extractors
-        self.featureset_name = (
-            f"featureset_{hash(tuple(fe.feature_name for fe in feature_extractors))}"
-        )
+        self.featureset_name = f"featureset_{abs(hash(tuple(fe.feature_name for fe in feature_extractors)))}"
         self.feature_names = [fe.feature_name for fe in feature_extractors]
 
     def to_dict(self) -> Dict[str, Any]:
@@ -89,6 +87,7 @@ class FeatureLogger:
         _register_featureset(): Registers the feature set with the LTR plugin.
         extract_features(query_params: Dict[str, Any], doc_ids: List[str]) -> Dict[str, List[float]]:
             Extracts features for the given document IDs using the specified query parameters.
+        clear_ltr_index(): Clears the LTR index.
     """
 
     def __init__(
